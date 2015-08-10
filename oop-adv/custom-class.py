@@ -68,4 +68,4 @@ for n in fib:
 print fib[5];
 print fib[4:10];
 
-https://docs.python.org/2/reference/datamodel.html#special-method-names
+# https://docs.python.org/2/reference/datamodel.html#special-method-names
