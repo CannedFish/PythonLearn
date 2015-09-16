@@ -1,0 +1,51 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from email import encoders;
+from email.header import Header;
+from email.mime.text import MIMEText;
+from email.utils import parseaddr, formataddr;
+import smtplib, sys;
+
+print sys.argv[1];
+
+def _format_addr(s):
+    name, addr = parseaddr(s);
+    return formataddr((Header(name, 'utf-8').encode(), \
+            addr.encode('utf-8') if isinstance(addr, unicode) else addr));
+
+addrlist = ['785358458@qq.com', 'lianggy0719@126.com', 'guanyu@iscas.ac.cn'];
+smtplist = ['smtp.qq.com', 'smtp.126.com', 'smtp.iscas.ac.cn'];
+
+def _show_list(l):
+    num = 0;
+    for item in l:
+        print '%d. %s' % (num, item);
+        num += 1;
+
+# from addr
+_show_list(addrlist);
+choose = raw_input('From: ');
+from_addr = addrlist[int(choose)];
+# password
+password = 'higv8435827'; #raw_input('Password: ');
+# to addr
+_show_list(addrlist);
+choose = raw_input('To: ');
+to_addr = addrlist[int(choose)];
+# smtp server
+_show_list(smtplist);
+choose = raw_input('SMTP server: ');
+smtp_server = smtplist[int(choose)];
+
+msg = MIMEText('Hello, send by Python..', 'plain', 'utf-8');
+msg['From'] = _format_addr('CannedFish <%s>' % from_addr);
+msg['To'] = _format_addr('OtherFish <%s>' % to_addr);
+msg['Subject'] = Header('A Fish to itself.', 'utf-8').encode();
+
+server = smtplib.SMTP(smtp_server, 25);
+server.set_debuglevel(1);
+server.login(from_addr, password);
+server.sendmail(from_addr, [to_addr], msg.as_string());
+server.quit();
+
