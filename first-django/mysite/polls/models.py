@@ -13,7 +13,8 @@ class Question(models.Model):
     return self.question_text;
 
   def was_published_resently(self):
-    return self.pub_date >= timezone.now() - datetime.timedelta(days = 1);
+    now = timezone.now();
+    return timezone.now() - datetime.timedelta(days = 1) <= self.pub_date <= now;
   was_published_resently.admin_order_field = 'pub_date';
   was_published_resently.boolean = True;
   was_published_resently.short_description = 'Published recently?';
