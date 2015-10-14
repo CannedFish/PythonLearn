@@ -3,6 +3,7 @@
 
 from numpy import *
 import operator, sys
+from os import listdir
 
 # def createDataSet():
     # group = array([[1.0, 1.1], [1.0, 1.0], [0, 0], [0, 0.1]]);
@@ -58,23 +59,98 @@ def file2matrix(filename):
         index += 1;
     return returnMat, classLabelVector;
 
-def datingClassTest():
-    hoRatio = 0.10;
-    datingDataMat, datingLabels = file2matrix('datingTestSet.txt');
-    normMat, ranges, minVals = autoNorm(datingDataMat);
-    m = normMat.shape[0];
-    numTestVecs = int(m * hoRatio);
-    errorCount = 0.0;
-    for i in range(numTestVecs):
-        classifierResult = classify0(normMat[i, :], normMat[numTestVecs:m, :]
-                , datingLabels[numTestVecs:m], 3);
-        print "The classifier came back with: %s, the real answer is: %s"\
-                % (classifierResult, datingLabels[i]);
-        if classifierResult != datingLabels[i]:
-            errorCount += 1.0;
-    print "The total error rate is: %.1f%%" % (errorCount / float(numTestVecs) * 100);
+try:
+    k = int(sys.argv[1]);
+except Exception:
+    k = 3;
 
-datingClassTest();
+# Handwriting recognition
+def img2vector(filename):
+    returnVect = zeros((1, 1024));
+    fr = open(filename);
+    for i in range(32):
+        lineStr = fr.readline();
+        for j in range(32):
+            returnVect[0, 32 * i + j] = int(lineStr[j]);
+    return returnVect;
+
+def handwritingClassTest():
+    hwLabels = [];
+    trainingFileList = listdir('trainingDigits');
+    m = len(trainingFileList);
+    trainingMat = zeros((m, 1024));
+    for i in range(m):
+        fileNameStr = trainingFileList[i];
+        fileStr = fileNameStr.split('.')[0];
+        classNumStr = int(fileStr.split('_')[0]);
+        hwLabels.append(classNumStr);
+        trainingMat[i, :] = img2vector('trainingDigits/%s' % fileNameStr);
+    
+    testFileList = listdir('testDigits');
+    errorCount = 0.0;
+    mTest = len(testFileList);
+    errorRecord = [];
+    for i in range(mTest):
+        fileNameStr = testFileList[i];
+        # if fileNameStr == '': continue;
+        fileStr = fileNameStr.split('.')[0];
+        try:
+            classNumStr = int(fileStr.split('_')[0]);
+        except Exception:
+            print 'Error:', fileNameStr;
+            continue;
+        vectorUnderTest = img2vector('testDigits/%s' % fileNameStr);
+        classifierResult = classify0(vectorUnderTest, trainingMat, hwLabels, k);
+        # print 'The classifier came back with: %d, the real answer is: %d.'\
+                # % (classifierResult, classNumStr);
+        if classifierResult != classNumStr:
+            errorRecord.append('Error: %d -> %d, in %s'\
+                    % (classNumStr, classifierResult, fileNameStr));
+            errorCount += 1.0;
+
+    errorRate = errorCount / float(mTest);
+    print '\nThe total number of errors is: %d' % errorCount;
+    print '\nThe total error rate is: %.1f%%' % (errorRate * 100);
+    return errorRecord, errorRate;
+
+errorRecord, errorRate = handwritingClassTest();
+def show(s):
+    print s;
+map(show, errorRecord);
+        
+# Error rate test
+# def datingClassTest():
+    # hoRatio = 0.10;
+    # datingDataMat, datingLabels = file2matrix('datingTestSet.txt');
+    # normMat, ranges, minVals = autoNorm(datingDataMat);
+    # m = normMat.shape[0];
+    # numTestVecs = int(m * hoRatio);
+    # errorCount = 0.0;
+    # for i in range(numTestVecs):
+        # classifierResult = classify0(normMat[i, :], normMat[numTestVecs:m, :]
+                # , datingLabels[numTestVecs:m], k);
+        # print "The classifier came back with: %s, the real answer is: %s"\
+                # % (classifierResult, datingLabels[i]);
+        # if classifierResult != datingLabels[i]:
+            # print classifierResult, datingLabels[i];
+            # errorCount += 1.0;
+    # print "The total error rate is: %.1f%%, with K is: %d."\
+            # % (errorCount / float(numTestVecs) * 100, k);
+
+# datingClassTest();
+
+# Real app
+# def classifyPerson():
+    # percentTats = float(raw_input('percentage of time spent playing video games? '));
+    # ffMiles = float(raw_input('frequent flier miles earned per year? '));
+    # iceCream = float(raw_input('liters of ice cream consumed per year? '));
+    # datingDataMat, datingLabels = file2matrix('datingTestSet.txt');
+    # normMat, ranges, minVals = autoNorm(datingDataMat);
+    # inArr = array([ffMiles, percentTats, iceCream]);
+    # classifierResult = classify0((inArr - minVals) / ranges, normMat, datingLabels, k);
+    # print 'You will probably like this person', classifierResult;
+   
+# classifyPerson();
 
 # show in plot
 # datingDataMat, datingLabels = file2matrix('datingTestSet.txt');
